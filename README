@@ -1,0 +1,292 @@
+
+	Copyright (C) 2008 Markus KARG (markus-karg@users.sourceforge.net)
+
+	This file is part of MailResourceAdapter.
+
+	MailResourceAdapter is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+
+	MailResourceAdapter is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+ 
+ 	You should have received a copy of the GNU General Public License
+	along with MailResourceAdapter; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+	
+	ABSTRACT
+	
+		The MailResourceAdapter is a resource adapter (following the rules
+		of JCA and J2EE) that allows to process incoming messages without
+		explicitly polling for new messages periodically. New messages get
+		pushed into the application asynchronously as soon as they arrive,
+		using a message driven bean to process them.
+
+		MailResourceAdapter is intended to process email automatically.
+		A lot of interesting things can be done with a clever combination
+		of MailRA and self-written MDBs:
+		- SPAM filters
+		- Automatic Mail Answering
+		- Mail Archiving in Database
+		- Mail distribution (sorting, forwarding, etc.)
+		- Mail Gateways (Mail to SMS etc.)
+		- Automatic Business Processes basing on incoming eMail
+		...and lots of more uses...
+
+
+	LICENCE
+	
+		This software is published by the terms of the GNU General Public Licence
+		(aka GPL). You can find the complete licensing conditions in the file
+		LICENCE.txt, or on http://www.gnu.org.
+		
+		For other use cases than those covered by GPL, you need to obtain a
+		commercial licence. Please contact markus-karg@users.sourceforge.net
+		for more information.
+
+		
+	WARRANTY
+	
+		This software is published as is, without any warranty.
+
+		
+	HELP
+
+		There is no official support provided for this software right now,
+		but you can file bug reports and feature requests using the trackers
+		found on SourceForge, or join the open discussion forum (see below).
+
+		Please do not directly write to authors or contributors to request
+		any form of help or support.
+		
+	
+	FEEDBACK
+	
+		Any kind of feedback is welcome.
+
+		Please join the open discussion forum (see below).
+
+		Since our email inbound is full with spam, please do not try to
+		send email directly to the authors or contributors.
+
+
+	HOW TO REPORT BUGS
+
+		There is a bug tracker found on SourceForge:
+		http://sourceforge.net/tracker/?group_id=137224&atid=738095
+		
+
+	HOW TO REQUEST FEATURES
+
+		There is a feature requests tracker found on SourceForge:
+		http://sourceforge.net/tracker/?group_id=137224&atid=738098
+
+
+	HOW TO DISCUSS THIS SOFTWARE
+
+		If you want to discuss this software with other users, or with authors
+		and contributors, feel free to join the Open Discussion Forum found on
+		SourceForge: http://sourceforge.net/forum/forum.php?forum_id=463089
+
+
+	AUTHOR(S) and CONTRIBUTOR(S)
+	
+		The following people helped in this project, either by coding, or
+		by some other useful help:
+	
+		Markus KARG (markus-karg@users.sourceforge.net)
+
+
+	BUILDING
+	
+		To build the resource adapter from the sources, you need to have
+		the following installed on your machine:
+		
+		* ANT, since the build scripts are ANT scripts.
+		  Check www.apache.org for that.
+		   
+		To build the code, a file named build.properties should be create according
+		to the rules provided in build.xml.
+
+		Once ready with this, just let ANT process the build script. The resulting,
+		ready-to-use binary module (the resource adapter .rar file) can be found
+		in the dist directory.
+
+
+	THIRD PARTY SOFTWARE
+
+		This project uses the following third party software:
+
+		* Java Connector API GlassFish Implementation (JCA RI, JSR 112)
+
+		  This library (connector-api.jar) is provided by GlassFish
+		  under GPL and is needed at compile time only.
+
+		  Since this API is part of Java EE 1.5, at runtime the needed
+		  interfaces and classes are to be provided by the application server
+		  product.
+
+		  For more information see https://glassfish.dev.java.net/javaee5/integration-tech/glassfish_connectors.html 
+
+		* Java Mail API GlassFish Implementation (JSR 904 / JSR 919)
+
+		  This library (mail.jar) is provided by GlassFish under GPL
+		  and is needed at compile time only.
+
+		  Since this API is part of Java EE 1.5, at runtime the needed
+		  interfaces and classes are to be provided by the application server
+		  product.
+
+		  For more information see https://glassfish.dev.java.net/javaee5/mail/
+
+		* Resource Adapter Foundation Classes (RAFC)
+
+		  This library (rafc-1.1.1.jar) is provided by Markus KARG under GPL
+		  and is needed for both, compile and runtime. It contains essential
+		  abstract classes that build a stable foundation for easier
+		  implementation of resource adapters.
+
+		  For more information see http://sourceforge.net/projects/rafc/ 
+		
+
+	CONFIGURATION
+	
+		If no manual configuration is provided, MailRA will use port 25
+		on a randomly self-selected IP address.
+		
+		The IP address can be configured at deployment time using the
+		configuration property "IPAddress" of the Resource Adapter.
+
+		The port number can be configured at deployment time using the
+		configuration property "PortNumber" of the Resource Adapter.
+		
+		Note: How the customization actually is done is up to the application
+		      server. GlassFish, for example, is asking for customization
+		      parameters explicitly when deploying using the browser based
+		      administration console.
+
+		Note: Some application servers, like GlassFish, first start up MailRA
+		      using the default value of 25, stop it later, and restart it
+		      using the provided value. Unfortunately it is out of reach of
+		      MailRA to prevent that behaviour, which can lead to problems if
+		      port 25 is already in use. To work around that, you can change
+		      the default port in the file META-INF/ra.xml prior to deployment.
+		      
+		Note: Some application servers, like GlassFish, re-apply formerly
+		      used configuration values automatically without giving any note
+		      to the deployer. Unless you specify a value, the old value will
+		      get used, even when you did undeploy - deploy instead of
+		      redeploy. Please do not file this as a bug to the MailRA bug
+		      tracker, as it is a problem (or feature) of your particular
+		      application server.
+		      
+		Note: Some application servers, like GlassFish, have bugs in their
+		      configuration procedure. Please check first the bug tracker of
+		      the application server vendor for such bugs before posting bug
+		      reports in the MailRA bug tracker. It is not funny doing lots
+		      of debugging to find out that the particular application server
+		      is buggy while MailRA is not, and everybody but the bug reporter
+		      already did know for years.
+
+
+	DEPLOYMENT
+	
+		There are no MailRA specific deployment steps.
+
+		Please consult your application server's manual for deployment issues.
+		
+		
+	STANDARDS COMPLIANCE
+	
+		We did our best to ensure compatibility with the following standards:
+		
+		* JCA 1.5
+		* Java EE 1.5
+		* Java Mail API
+		
+		Since we have not yet passed the CTS (official compliance tests by Sun),
+		and since we are not yet a legal JCA, Java EE or Java Mail API icencee,
+		we have to indicate explicitly that the file resource adapter is
+		currently neither JCA, Java Mail API nor J2EE compliant officially.
+		
+		The use of the names "JCA", "Java Mail API" and "Java EE" is not for
+		marketing reasons or to	state any not actually given compliance, but
+		only to indicate the names of the standards that we used as a guiding
+		directive at development time.
+
+		Nevertheless, we are very confident that the file resource adapter actually is
+		at most compatible with the enlisted standards and will work with any
+		application server that itself is compliant with the Java EE 1.5 standard.
+		
+		
+	TRADEMARKS
+	
+		Any trademarks found here are used with respect to the rights of its
+		owners. "Java", "JCA", and "J2EE" are, or are assumed to be, legal trademarks
+		of	Sun Microsystems.
+		
+		
+	FEATURES
+	
+		* Uses SMTP to receive emails from MTAs without polling a POP3 account.
+
+		* Uses javax.mail.Message for message transportation to the MDB.
+		
+		* Supports Multipart MIME (HTML emails and binary attachments). 
+
+
+	VERSION HISTORY (latest first)
+	
+		1.0.0-alpha-2 (2007-03-01)
+		
+			* Support for customizable SMTP IP address
+			
+				The IP address that is used for SMTP inbound can now be
+				customized at time of deployment. Unless modified, the default
+				IP address is chosen automatically.
+		
+			* Support for customizable SMTP port number
+			
+				The port number that is used for SMTP inbound can now be
+				customized at time of deployment. Unless modified, the default
+				port number is 25.
+		
+			* Support for javax.mail.Message
+
+				The class used to transport an email from MailRA to the MDB now
+				more is proprietary. From now on, we are using the class
+				javax.mail.Message, which is the standard class for emails as
+				defined by the Java Mail API. Much more information is to be
+				found using the vast number of getters found in that class,
+				compared to the simple interface of the previous, proprietary
+				class.
+
+			* Support for MIME
+			
+				The current code is able to process MIME messages (including
+				HTML mails and large attachments), even	huge ones (depending on
+				the amount of memory available).
+
+			* Internal Optimization
+			
+				Processing of the message body is no more based on characters,
+				but done on the level of bytes, which should be faster,
+				especially for huge attachments.
+	
+		1.0.0-alpha-1 (2007-02-02)
+		
+			* Support for SMTP only
+
+				This release only supports the SMTP protocol. Support for POP3
+				and IMAP4 might be implemented in some future release, but
+				there is no strict time plan for that.
+			
+			* Proof on concept
+			
+				This release is only a proof of concept and not intended for
+				use in productive environments. Data loss may occur.			

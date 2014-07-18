@@ -1,0 +1,49 @@
+
+	Copyright (C) 2008 Markus KARG (markus-karg@users.sourceforge.net)
+
+	This file is part of MailResourceAdapter.
+
+	MailResourceAdapter is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+
+	MailResourceAdapter is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+ 
+ 	You should have received a copy of the GNU General Public License
+	along with MailResourceAdapter; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+	
+	TO DO
+	
+		The following tasks need to be done:
+		
+		* We should check for asynchronous WorkException using a
+		  WorkListener.
+		  
+		* In case of IOException or WorkException it would be a good
+		  policy to just try again at a later time.
+
+		* We should use NIO API instead of one thread per connection.
+		
+		* Support TX inflow: In case of SMTP Exception, rollback endpoint TX.
+		
+		* SMTP as a class, SMTP Exception as a class.
+		
+		* Support more than one endpoint / thread per connection to allow
+		  parallel processing of several incoming emails at one time.
+		  Otherwise receiving the next mail in a connection must wait until
+		  the MDB finished its (possibly lengthy) processing. 
+		
+		* Support more than one IP / Port combination to listen to.
+		
+		* Support POP3 polling.
+		
+		* Support IMAP4 pushing.
+		
+		* Support more than one endpoint.

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Copyright (C) 2008 Markus KARG (markus-karg@users.sourceforge.net)
+	
+	This file is part of MailResourceAdapter.
+	
+	MailResourceAdapter is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+	
+	MailResourceAdapter is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with MailResourceAdapter; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<connector xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/connector_1_5.xsd"	version="1.5">
+	<vendor-name>mailra.sourceforge.net</vendor-name>
+	<eis-type>SMTP MTA</eis-type>
+	<resourceadapter-version>1.0.0-alpha-2</resourceadapter-version>
+	<license>
+		<description>
+			Mail Resource Adapter is free software; you can redistribute it and/or modify
+  			it under the terms of the GNU General Public License as published by the Free
+  			Software Foundation; either version 2 of the License, or (at your option) any
+  			later version.
+  
+  			Mail Resource Adapter is distributed in the hope that it will be useful, but
+  			WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  			FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+  			details.
+  
+  			You should have received a copy of the GNU General Public License along with
+  			Mail Resource Adapter; if not, write to the Free Software Foundation, Inc.,
+  			59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+		</description>
+		<license-required>false</license-required>
+	</license>
+	<resourceadapter>
+		<resourceadapter-class>net.sourceforge.mailra.spi.MailResourceAdapter</resourceadapter-class>
+		<config-property>
+			<description>SMTP traffic will be received on this port.</description>
+			<config-property-name>PortNumber</config-property-name>
+			<config-property-type>java.lang.Integer</config-property-type>
+			<config-property-value>25</config-property-value>
+		</config-property>
+		<config-property>
+			<description>SMTP traffic will be received on this IP address. If no value is provided, a local host address will be selected automatically.</description>
+			<config-property-name>IPAddress</config-property-name>
+			<config-property-type>java.lang.String</config-property-type>
+		</config-property>
+		<inbound-resourceadapter>
+			<messageadapter>
+				<messagelistener>
+					<messagelistener-type>net.sourceforge.mailra.api.inbound.MessageListener</messagelistener-type>
+					<activationspec>
+						<activationspec-class>net.sourceforge.mailra.spi.inbound.MessageListenerActivationSpec</activationspec-class>
+					</activationspec>
+				</messagelistener>
+			</messageadapter>
+		</inbound-resourceadapter>
+	</resourceadapter>
+</connector>

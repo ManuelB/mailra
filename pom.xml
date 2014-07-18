@@ -1,0 +1,28 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>mailra</groupId>
+	<artifactId>de.apaxo.adapter</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>rar</packaging>
+	<name>Mail RA Adapter for Java EE</name>
+	<description>This package is based on http://sourceforge.net/projects/mailra/</description>
+	<dependencies>
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.7</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.resource</groupId>
+			<artifactId>javax.resource-api</artifactId>
+			<version>1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.rafc</groupId>
+			<artifactId>rafc</artifactId>
+			<version>1.1.2</version>
+		</dependency>
+
+	</dependencies>
+</project>
