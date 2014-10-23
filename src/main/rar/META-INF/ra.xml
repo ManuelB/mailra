@@ -48,7 +48,7 @@
 			<description>SMTP traffic will be received on this port.</description>
 			<config-property-name>PortNumber</config-property-name>
 			<config-property-type>java.lang.Integer</config-property-type>
-			<config-property-value>25</config-property-value>
+			<config-property-value>9025</config-property-value>
 		</config-property>
 		<config-property>
 			<description>SMTP traffic will be received on this IP address. If no value is provided, a local host address will be selected automatically.</description>

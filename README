@@ -156,42 +156,59 @@
 
 	CONFIGURATION
 	
-		If no manual configuration is provided, MailRA will use port 25
-		on a randomly self-selected IP address.
+		Port Number
+	
+			The port number can be configured at deployment time using the
+			configuration property "PortNumber" of the Resource Adapter.
+			
+			If no manual configuration is provided, MailRA will use port 25.
+			
+		IP Address
 		
-		The IP address can be configured at deployment time using the
-		configuration property "IPAddress" of the Resource Adapter.
+			The IP address can be configured at deployment time using the
+			configuration property "IPAddress" of the Resource Adapter.
 
-		The port number can be configured at deployment time using the
-		configuration property "PortNumber" of the Resource Adapter.
+			If no manual configuration is provided, MailRA will use a randomly
+			selected IP Address (one out of the host's existing addresses).
+
+		Socket Timeout
+
+			The socket timeout can be configured at deployment time using the
+			configuration property "SocketTimeout" of the Resource Adapter. The
+			value has to be provided in milliseconds.
+			
+			If no manual configuration is provided, MailRA will use a default
+			socket timeout of ten minutes (i. e. 600000 milliseconds).
+			
+		General Notes on Configuration
 		
-		Note: How the customization actually is done is up to the application
-		      server. GlassFish, for example, is asking for customization
-		      parameters explicitly when deploying using the browser based
-		      administration console.
+			How the customization actually is done is up to the application
+			server. GlassFish, for example, is asking for customization
+			parameters explicitly when deploying using the browser based
+			administration console.
 
-		Note: Some application servers, like GlassFish, first start up MailRA
-		      using the default value of 25, stop it later, and restart it
-		      using the provided value. Unfortunately it is out of reach of
-		      MailRA to prevent that behaviour, which can lead to problems if
-		      port 25 is already in use. To work around that, you can change
-		      the default port in the file META-INF/ra.xml prior to deployment.
+			Some application servers, like GlassFish, first start up MailRA
+			using the default value of 25, stop it later, and restart it
+			using the provided value. Unfortunately it is out of reach of
+			MailRA to prevent that behaviour, which can lead to problems if
+			port 25 is already in use. To work around that, you can change
+			the default port in the file META-INF/ra.xml prior to deployment.
 		      
-		Note: Some application servers, like GlassFish, re-apply formerly
-		      used configuration values automatically without giving any note
-		      to the deployer. Unless you specify a value, the old value will
-		      get used, even when you did undeploy - deploy instead of
-		      redeploy. Please do not file this as a bug to the MailRA bug
-		      tracker, as it is a problem (or feature) of your particular
-		      application server.
+			Some application servers, like GlassFish, re-apply formerly
+			used configuration values automatically without giving any note
+			to the deployer. Unless you specify a value, the old value will
+			get used, even when you did undeploy - deploy instead of
+			redeploy. Please do not file this as a bug to the MailRA bug
+			tracker, as it is a problem (or feature) of your particular
+			application server.
 		      
-		Note: Some application servers, like GlassFish, have bugs in their
-		      configuration procedure. Please check first the bug tracker of
-		      the application server vendor for such bugs before posting bug
-		      reports in the MailRA bug tracker. It is not funny doing lots
-		      of debugging to find out that the particular application server
-		      is buggy while MailRA is not, and everybody but the bug reporter
-		      already did know for years.
+			Some application servers, like GlassFish, have bugs in their
+			configuration procedure. Please check first the bug tracker of
+			the application server vendor for such bugs before posting bug
+			reports in the MailRA bug tracker. It is not funny doing lots
+			of debugging to find out that the particular application server
+			is buggy while MailRA is not, and everybody but the bug reporter
+			already did know for years.
 
 
 	DEPLOYMENT
@@ -242,7 +259,29 @@
 
 	VERSION HISTORY (latest first)
 	
-		1.0.0-alpha-2 (2007-03-01)
+		1.0.0-SNAPSHOT (in progress)
+		
+			* Improved error handling
+			
+				In case of rejected connection handling, this event will get
+				logged and the socket gets closed. So the socket will not
+				kept open indefinitely, i. e. the calling server can register
+				that something went wrong and try again.
+				
+				For better stability of the boot process, the adapter will
+				not start if the application server rejects to start the
+				inbound	acceptor thread.
+				
+				To prevent the server from waiting endless on a possibly broken
+				client connection, keepalive packets and timeouts are used. The
+				default timeout value is ten minutes, and can be configured at
+				deployment.
+				
+				More tracing information in the log in case of exceptions,
+				especially if work is rejected by the server or on socket
+				problems.
+
+		1.0.0-alpha-2 (2008-03-01)
 		
 			* Support for customizable SMTP IP address
 			
@@ -278,7 +317,7 @@
 				but done on the level of bytes, which should be faster,
 				especially for huge attachments.
 	
-		1.0.0-alpha-1 (2007-02-02)
+		1.0.0-alpha-1 (2008-02-02)
 		
 			* Support for SMTP only
 

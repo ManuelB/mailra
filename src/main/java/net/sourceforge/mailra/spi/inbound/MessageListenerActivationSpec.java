@@ -29,6 +29,7 @@ import net.sourceforge.rafc.spi.inbound.AbstractActivationSpec;
  * @author Markus KARG (markus-karg@users.sourceforge.net)
  */
 @SuppressWarnings("serial")
+// @Activation(messageListeners = { net.sourceforge.mailra.api.inbound.MessageListener.class })
 public final class MessageListenerActivationSpec extends AbstractActivationSpec {
 	// Intentionally left blank.
 }

@@ -1,4 +1,5 @@
 package net.sourceforge.mailra.spi;
+
 /*
  * Copyright (C) 2008 Markus KARG (markus-karg@users.sourceforge.net)
  * 
@@ -31,12 +32,19 @@ import java.util.Arrays;
  * This stream class is useful whenever a reading application shall stop reading
  * from a stream when a special token is found in the stream. The token itself
  * will not be forwarded to the reading application, but just makes any
- * <code>read</code> to return -1 (which indicates to the caller that the
- * stream is closed).
+ * <code>read</code> to return -1 (which indicates to the caller that the stream
+ * is closed).
  * 
  * @author Markus KARG (markus-karg@users.sourceforge.net)
  */
 public final class StopTokenInputStream extends InputStream {
+
+	/**
+	 * Try maximum to read 200 bytes.
+	 */
+	private static final long MAX_BYTES = 200l * 1024l * 1024l;
+
+	private long readBytes = 0l;
 
 	private final PushbackInputStream sourceStream;
 
@@ -44,17 +52,26 @@ public final class StopTokenInputStream extends InputStream {
 
 	private boolean detectedStopToken;
 
-	public StopTokenInputStream(final InputStream sourceStream, final byte[] stopToken) {
-		this.sourceStream = new PushbackInputStream(sourceStream, stopToken.length);
+	public StopTokenInputStream(final InputStream sourceStream,
+			final byte[] stopToken) {
+		this.sourceStream = new PushbackInputStream(sourceStream,
+				stopToken.length);
 		this.stopToken = stopToken;
 	}
 
 	@Override
 	public final int read() throws IOException {
+		readBytes++;
+		if (readBytes > MAX_BYTES) {
+			throw new IOException("It was tried to read more than " + MAX_BYTES
+					+ " bytes. "
+					+ " Email probably does not end with <CR><LF>.<CR><LF>");
+		}
+
 		if (this.detectedStopToken)
 			return -1;
 
-		final byte[] b = new byte[stopToken.length];
+		final byte[] b = new byte[this.stopToken.length];
 
 		this.sourceStream.read(b);
 

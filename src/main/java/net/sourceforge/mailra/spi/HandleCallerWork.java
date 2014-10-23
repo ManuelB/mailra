@@ -28,10 +28,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -46,50 +43,43 @@ import net.sourceforge.mailra.api.inbound.MessageListener;
 
 public final class HandleCallerWork implements Work {
 
-	private static final Logger LOGGER = Logger.getLogger(HandleCallerWork.class.getName());
+	private static final Logger LOGGER = Logger
+			.getLogger(HandleCallerWork.class.getName());
 
 	private final Socket socket;
 
 	private final Collection<MessageEndpointFactory> messageEndpointFactories;
 
-	HandleCallerWork(final Socket socket, final Collection<MessageEndpointFactory> messageEndpointFactories) {
+	private final int timeout;
+
+	HandleCallerWork(final Socket socket,
+			final Collection<MessageEndpointFactory> messageEndpointFactories,
+			final int timeout) {
 		this.socket = socket;
 		this.messageEndpointFactories = messageEndpointFactories;
+		this.timeout = timeout;
 	}
 
 	@Override
 	public final void run() {
 		try {
+			this.socket.setKeepAlive(true);
+			this.socket.setSoTimeout(this.timeout);
+
 			final InputStream is = this.socket.getInputStream();
 			try {
-				final BufferedReader input = new BufferedReader(new InputStreamReader(is));
+				final BufferedReader input = new BufferedReader(
+						new InputStreamReader(is));
 				try {
-					final PrintWriter output = new PrintWriter(new OutputStreamWriter(this.socket.getOutputStream()));
+					final PrintWriter output = new PrintWriter(
+							new OutputStreamWriter(
+									this.socket.getOutputStream()));
 					try {
 						output.println("220 MailRA Service ready");
 						output.flush();
 
-						didNotQuit = true;
-						while (didNotQuit) {
-							final String answeredLine;
-
-							if (this.isDataMode)
-								answeredLine = this.handleData(is);
-							else {
-								final String receivedLine = input.readLine();
-
-								HandleCallerWork.LOGGER.finest(String.format("R: %s", receivedLine));
-
-								answeredLine = this.handleLine(receivedLine);
-							}
-
-							if (answeredLine != null) {
-								output.println(answeredLine);
-								output.flush();
-
-								HandleCallerWork.LOGGER.finest(String.format("S: %s", answeredLine));
-							}
-						}
+						while (this.didNotQuit)
+							this.handleCommandVerb(input.readLine(), is, output);
 					} finally {
 						output.close();
 					}
@@ -105,6 +95,7 @@ public final class HandleCallerWork implements Work {
 			 * If the caller is programmed in a stable manner, it will call
 			 * again.
 			 */
+			HandleCallerWork.LOGGER.warning(String.format("IOException: ", e));
 		}
 
 		try {
@@ -113,51 +104,35 @@ public final class HandleCallerWork implements Work {
 			/*
 			 * Seems TCP is completely screwed. We just give up.
 			 */
+			HandleCallerWork.LOGGER.warning(String.format("IOException: ", e));
 		}
 	}
 
-	private boolean didNotQuit;
+	private boolean didNotQuit = true;
 
-	private boolean isDataMode = false;
+	private final void handleData(final InputStream is)
+			throws MessagingException {
+		final Message message = new MimeMessage((Session) null,
+				new StopTokenInputStream(is, "\r\n.\r\n".getBytes()));
 
-	private String sender;
-
-	private final Collection<String> recipients = new LinkedList<String>();
-
-	private StringBuilder data = new StringBuilder();
-
-	private final String handleLine(final String line) {
-		return this.handleCommandVerb(line);
-	}
-
-	private final String handleData(final InputStream is) {
 		try {
-			final Message message = new MimeMessage((Session) null, new StopTokenInputStream(is, "\r\n.\r\n".getBytes()));
-			this.isDataMode = false;
-
-			try {
-				this.triggerMessageEndpoint(message);
-			} catch (final UnavailableException e) {
-				HandleCallerWork.LOGGER.info(e.toString());
-			}
-
-			HandleCallerWork.LOGGER.fine("Received mail.");
-
-			this.clear();
-
-			return this.answerOK();
-		} catch (final MessagingException e) {
-			return this.answerSyntaxErrorInParametersOrArguments();
+			this.triggerMessageEndpoint(message);
+		} catch (final UnavailableException e) {
+			HandleCallerWork.LOGGER.info(e.toString());
 		}
+
+		HandleCallerWork.LOGGER.fine("Received mail.");
 	}
 
-	private final void triggerMessageEndpoint(final Message message) throws UnavailableException {
+	private final void triggerMessageEndpoint(final Message message)
+			throws UnavailableException {
 		/*
 		 * TODO It makes no sense to accept SMTP mails if there is no endpoint
 		 * factory.
 		 */
 
-		final MessageEndpoint messageEndpoint = this.messageEndpointFactories.iterator().next().createEndpoint(null);
+		final MessageEndpoint messageEndpoint = this.messageEndpointFactories
+				.iterator().next().createEndpoint(null);
 		try {
 			final MessageListener messageListener = (MessageListener) messageEndpoint;
 			messageListener.onMessage(message);
@@ -166,119 +141,102 @@ public final class HandleCallerWork implements Work {
 		}
 	}
 
-	private final String handleCommandVerb(final String line) {
+	private final void handleCommandVerb(final String line,
+			final InputStream is, final PrintWriter output) {
 		final String smtpCommandVerb = line.substring(0, 4).toUpperCase();
 
 		if (smtpCommandVerb.equals("HELO"))
-			return this.handleHELO();
+			this.handleHELO(output);
 		else if (smtpCommandVerb.equals("EHLO"))
-			return this.handleEHLO();
+			this.handleEHLO(output);
 		else if (smtpCommandVerb.equals("MAIL"))
-			return this.handleMAIL(line);
+			this.handleMAIL(output);
 		else if (smtpCommandVerb.equals("RCPT"))
-			return this.handleRCPT(line);
+			this.handleRCPT(output);
 		else if (smtpCommandVerb.equals("DATA"))
-			return this.handleDATA();
+			this.handleDATA(is, output);
 		else if (smtpCommandVerb.equals("RSET"))
-			return this.handleRSET();
+			this.handleRSET(output);
 		else if (smtpCommandVerb.equals("QUIT"))
-			return this.handleQUIT();
+			this.handleQUIT(output);
 		else if (smtpCommandVerb.equals("NOOP"))
-			return this.handleNOOP();
+			this.handleNOOP(output);
 		else
-			return this.answerUnknownCommand();
+			this.answerUnknownCommand(output);
 	}
 
-	private final String handleHELO() {
-		return this.answerOK();
+	private final void handleHELO(final PrintWriter output) {
+		this.answerOK(output);
 	}
 
-	private final String handleEHLO() {
-		return this.answerOK();
+	private final void handleEHLO(final PrintWriter output) {
+		this.answerOK(output);
 	}
 
-	private final String handleQUIT() {
-		this.clear();
+	private final void handleQUIT(final PrintWriter output) {
 		this.didNotQuit = false;
-		return "221 MailRA Service closing transmission channel";
+		output.println("221 MailRA Service closing transmission channel");
+		output.flush();
 	}
 
-	private final String handleRCPT(final String line) {
-		final Matcher matcher = Pattern.compile("RCPT TO:([^ ]*)(?: ([^ ]*))?").matcher(line);
-		if (matcher.find()) {
-			if (matcher.groupCount() > 0) {
-				final String forwardPath = matcher.group(1);
+	private final void handleRCPT(final PrintWriter output) {
+		this.answerOK(output);
+	}
 
-				/*
-				 * Rcpt Parameters are not supported by this version of MailRA.
-				 * 
-				 * final String rcptParameters = matcher.group(2);
-				 */
+	private final void handleDATA(final InputStream is, final PrintWriter output) {
+		try {
+			output.println("354 Start mail input; end with <CRLF>.<CRLF>");
+			output.flush();
 
-				this.recipients.add(forwardPath);
-				return this.answerOK();
-			}
+			this.handleData(is);
+
+			/*
+			 * Open question: How can the DATA handler pass back work to MDBs?
+			 * 
+			 * Answer: We must split the general SMTP handling from the RA
+			 * stuff, which means, we make handleDATA call an abstract
+			 * handleMIME method, which is overwritten later.
+			 * 
+			 * But how can we do this in case of COMMAND pattern...?
+			 */
+			this.answerOK(output);
+		} catch (final MessagingException e) {
+			this.answerSyntaxErrorInParametersOrArguments(output);
 		}
-
-		return this.answerSyntaxErrorInParametersOrArguments();
 	}
 
-	private final String handleDATA() {
-		this.isDataMode = true;
-		return "354 Start mail input; end with <CRLF>.<CRLF>";
+	private final void handleMAIL(final PrintWriter output) {
+		this.answerOK(output);
 	}
 
-	private final String handleMAIL(final String line) {
-		final Matcher matcher = Pattern.compile("MAIL FROM:([^ ]*)(?: ([^ ]*))?").matcher(line);
-		if (matcher.find()) {
-			if (matcher.groupCount() > 0) {
-				final String reversePath = matcher.group(1);
-
-				/*
-				 * Mail Parameters are not supported by this version of MailRA.
-				 * 
-				 * final String mailParameters = matcher.group(2);
-				 */
-
-				this.sender = reversePath;
-				return this.answerOK();
-			}
-		}
-
-		return this.answerSyntaxErrorInParametersOrArguments();
+	private final void handleRSET(final PrintWriter output) {
+		this.answerOK(output);
 	}
 
-	private final String handleRSET() {
-		this.clear();
-		return this.answerOK();
+	private final void handleNOOP(final PrintWriter output) {
+		this.answerOK(output);
 	}
 
-	private final String handleNOOP() {
-		return this.answerOK();
+	private final void answerOK(final PrintWriter output) {
+		output.println("250 OK");
+		output.flush();
 	}
 
-	private final String answerOK() {
-		return "250 OK";
+	private final void answerUnknownCommand(final PrintWriter output) {
+		output.println("500 Unknown command");
+		output.flush();
 	}
 
-	private final String answerUnknownCommand() {
-		return "500 Unknown command";
-	}
-
-	private final String answerSyntaxErrorInParametersOrArguments() {
-		return "501 Syntax error in parameters or arguments";
-	}
-
-	private final void clear() {
-		this.sender = null;
-		this.recipients.clear();
-		this.data.delete(0, this.data.length());
+	private final void answerSyntaxErrorInParametersOrArguments(
+			final PrintWriter output) {
+		output.println("501 Syntax error in parameters or arguments");
+		output.flush();
 	}
 
 	@Override
 	public final void release() {
 		/*
-		 * Handling a call is not a long work. It is acceptable that the
+		 * Handling a call is not an endless work. It is acceptable that the
 		 * application server has to create another thread instead of reusing
 		 * ours. So we reject the application server's appeal to shutdown our
 		 * work by just doing nothing here.

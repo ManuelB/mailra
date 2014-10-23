@@ -23,12 +23,14 @@
 	
 		The following tasks need to be done:
 		
-		* We should check for asynchronous WorkException using a
-		  WorkListener.
-		  
-		* In case of IOException or WorkException it would be a good
-		  policy to just try again at a later time.
-
+		* Use special stream for tracing without cluttering source.
+		
+		* Split into Pure Caller Handling and SMTP Handling.
+		
+		* If we split up into Request / Response, then we can can:
+			- Package "QUIT THIS" into the response and get rid of the global variable "didNotQuit".
+			- Split up SMTP processor into single COMMAND classes. 
+		
 		* We should use NIO API instead of one thread per connection.
 		
 		* Support TX inflow: In case of SMTP Exception, rollback endpoint TX.

@@ -40,32 +40,51 @@ import net.sourceforge.rafc.spi.AbstractResourceAdapter;
 /**
  * <code>ResourceAdapter</code> implementing the mail connector.
  * 
+ * Other example:
+ * https://github.com/nekop/twitter-resource-adapter/
+ * 
+ * Wildfly Resource Adapter:
+ * https://docs.jboss.org/author/display/WFLY8/Resource+adapters
+ * 
  * @author Markus KARG (markus-karg@users.sourceforge.net)
  */
+// @Connector
 public final class MailResourceAdapter extends AbstractResourceAdapter {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final Logger LOGGER = Logger.getLogger(MailResourceAdapter.class.getName());
+	private static final Logger LOGGER = Logger
+			.getLogger(MailResourceAdapter.class.getName());
 
 	private ServerSocket smtpSocket;
 
 	@Override
-	public void start(BootstrapContext bootstrapContext) throws ResourceAdapterInternalException {
+	public void start(BootstrapContext bootstrapContext)
+			throws ResourceAdapterInternalException {
 		try {
 			MailResourceAdapter.LOGGER.finer("Starting...");
 
 			super.start(bootstrapContext);
 
-			this.smtpSocket = new ServerSocket(this.portNumber, 50, this.ipAddress);
-			this.getBootstrapContext().getWorkManager().scheduleWork(
-					new AcceptConnectionsWork(this.smtpSocket, this.getBootstrapContext().getWorkManager(), this.messageEndpointFactories));
+			this.smtpSocket = new ServerSocket(this.portNumber, 50,
+					this.ipAddress);
+			this.getBootstrapContext()
+					.getWorkManager()
+					.startWork(
+							new AcceptConnectionsWork(this.smtpSocket, this
+									.getBootstrapContext().getWorkManager(),
+									this.messageEndpointFactories,
+									this.socketTimeout));
 
-			MailResourceAdapter.LOGGER.info(String.format("Started on address %s port %d.", this.ipAddress, this.portNumber));
+			MailResourceAdapter.LOGGER.info(String.format(
+					"Started on address %s port %d.", this.ipAddress,
+					this.portNumber));
 		} catch (final IOException e) {
-			throw new ResourceAdapterInternalException("Cannot start due to IOException!", e);
+			throw new ResourceAdapterInternalException(
+					"Cannot start due to IOException!", e);
 		} catch (final WorkException e) {
-			throw new ResourceAdapterInternalException("Cannot start due to WorkException!", e);
+			throw new ResourceAdapterInternalException(
+					"Cannot start due to WorkException!", e);
 		}
 	}
 
@@ -84,7 +103,9 @@ public final class MailResourceAdapter extends AbstractResourceAdapter {
 			 */
 		}
 
-		MailResourceAdapter.LOGGER.info(String.format("Stopped on address %s port %d.", this.ipAddress, this.portNumber));
+		MailResourceAdapter.LOGGER.info(String.format(
+				"Stopped on address %s port %d.", this.ipAddress,
+				this.portNumber));
 	}
 
 	/*
@@ -96,7 +117,9 @@ public final class MailResourceAdapter extends AbstractResourceAdapter {
 	private final Collection<MessageEndpointFactory> messageEndpointFactories = new LinkedList<MessageEndpointFactory>();
 
 	@Override
-	public final void endpointActivation(final MessageEndpointFactory messageEndpointFactory, final ActivationSpec activationSpec) throws ResourceException {
+	public final void endpointActivation(
+			final MessageEndpointFactory messageEndpointFactory,
+			final ActivationSpec activationSpec) throws ResourceException {
 		MailResourceAdapter.LOGGER.finer("Activating endpoint...");
 
 		this.messageEndpointFactories.add(messageEndpointFactory);
@@ -105,7 +128,9 @@ public final class MailResourceAdapter extends AbstractResourceAdapter {
 	}
 
 	@Override
-	public final void endpointDeactivation(final MessageEndpointFactory messageEndpointFactory, final ActivationSpec activationSpec) {
+	public final void endpointDeactivation(
+			final MessageEndpointFactory messageEndpointFactory,
+			final ActivationSpec activationSpec) {
 		MailResourceAdapter.LOGGER.finer("Dectivating endpoint...");
 
 		/*
@@ -120,8 +145,10 @@ public final class MailResourceAdapter extends AbstractResourceAdapter {
 
 	private InetAddress ipAddress;
 
-	public final void setIPAddress(final String ipAddress) throws UnknownHostException {
-		this.ipAddress = ipAddress == null ? null : InetAddress.getByName(ipAddress);
+	public final void setIPAddress(final String ipAddress)
+			throws UnknownHostException {
+		this.ipAddress = ipAddress == null ? null : InetAddress
+				.getByName(ipAddress);
 	}
 
 	public final String getIPAddress() {
@@ -136,6 +163,16 @@ public final class MailResourceAdapter extends AbstractResourceAdapter {
 
 	public final int getPortNumber() {
 		return this.portNumber;
+	}
+
+	private int socketTimeout = 600000;
+
+	public final int getSocketTimeout() {
+		return this.socketTimeout;
+	}
+
+	public final void setSocketTimeout(final int socketTimeout) {
+		this.socketTimeout = socketTimeout;
 	}
 
 }
